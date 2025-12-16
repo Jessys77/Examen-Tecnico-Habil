@@ -1,0 +1,19 @@
+erDiagram
+    ESTADO {
+        int id_estado PK "Autoincrement"
+        string nombre "Not Null"
+        int numero_habitantes ">= 0"
+        string capital "Not Null"
+    }
+
+    MUNICIPIO {
+        int id_municipio PK "Autoincrement"
+        string nombre "Not Null"
+        string tipo_zona "Check: Urbana/Rural"
+        int numero_habitantes ">= 1"
+        int pueblo_magico "Bool (0/1)"
+        string tipo "Check: Desierto, Playa..."
+        int id_estado FK "Ref: ESTADO"
+    }
+
+    ESTADO ||--|{ MUNICIPIO : contiene

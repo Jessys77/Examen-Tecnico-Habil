@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Catálogo de Estados y Municipios</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 10px;
+      padding: 30px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+    h1 {
+      color: #333;
+      margin-bottom: 20px;
+      border-bottom: 3px solid #667eea;
+      padding-bottom: 10px;
+    }
+    h2 {
+      color: #555;
+      margin: 20px 0 15px 0;
+    }
+    form {
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 30px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      align-items: end;
+    }
+    input, select {
+      padding: 10px;
+      border: 2px solid #ddd;
+      border-radius: 5px;
+      font-size: 14px;
+      transition: border-color 0.3s;
+    }
+    input:focus, select:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+    label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+    }
+    button {
+      padding: 12px 24px;
+      background: #667eea;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.3s;
+      font-weight: bold;
+    }
+    button:hover {
+      background: #5568d3;
+    }
+    .btn-edit {
+      background: #28a745;
+      padding: 8px 16px;
+      font-size: 14px;
+    }
+    .btn-edit:hover {
+      background: #218838;
+    }
+    .btn-delete {
+      background: #dc3545;
+      padding: 8px 16px;
+      font-size: 14px;
+    }
+    .btn-delete:hover {
+      background: #c82333;
+    }
+    .btn-cancel {
+      background: #6c757d;
+    }
+    .btn-cancel:hover {
+      background: #5a6268;
+    }
+    ul {
+      list-style: none;
+      margin-top: 15px;
+    }
+    li {
+      background: #f8f9fa;
+      padding: 15px;
+      margin-bottom: 10px;
+      border-radius: 5px;
+      border-left: 4px solid #667eea;
+      transition: transform 0.2s;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    li:hover {
+      transform: translateX(5px);
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .item-info {
+      flex: 1;
+    }
+    .item-actions {
+      display: flex;
+      gap: 10px;
+    }
+    hr {
+      margin: 40px 0;
+      border: none;
+      border-top: 2px solid #eee;
+    }
+    #mensajeEstado, #mensajeMunicipio {
+      padding: 10px;
+      border-radius: 5px;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.5);
+      animation: fadeIn 0.3s;
+    }
+    .modal-content {
+      background-color: white;
+      margin: 5% auto;
+      padding: 30px;
+      border-radius: 10px;
+      width: 90%;
+      max-width: 600px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+      animation: slideDown 0.3s;
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 2px solid #eee;
+    }
+    .modal-header h3 {
+      color: #333;
+      margin: 0;
+    }
+    .close {
+      color: #aaa;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .close:hover {
+      color: #000;
+    }
+    .modal-form {
+      display: grid;
+      gap: 15px;
+    }
+    .modal-form input,
+    .modal-form select {
+      width: 100%;
+      padding: 10px;
+      border: 2px solid #ddd;
+      border-radius: 5px;
+    }
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+      justify-content: flex-end;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes slideDown {
+      from { transform: translateY(-50px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .info-text {
+      font-size: 12px;
+      color: #666;
+      margin-top: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Catálogo de Estados</h1>
+
+    <!-- Formulario para crear Estado -->
+    <h2>Agregar Estado</h2>
+    <form id="estadoForm">
+      <input type="text" id="nombreEstado" placeholder="Nombre del estado" required>
+      <input type="number" id="habitantesEstado" placeholder="Número de habitantes" min="0" required>
+      <input type="text" id="capitalEstado" placeholder="Capital" required>
+      <button type="submit">Guardar Estado</button>
+    </form>
+
+    <!-- Lista de Estados -->
+    <h2>Lista de Estados</h2>
+    <ul id="listaEstados"></ul>
+    <div id="mensajeEstado"></div>
+
+    <hr>
+
+    <h1>Catálogo de Municipios</h1>
+
+    <!-- Formulario para crear Municipio -->
+    <h2>Agregar Municipio</h2>
+    <form id="municipioForm">
+      <input type="text" id="nombreMunicipio" placeholder="Nombre del municipio" required>
+      <select id="tipoZona" required>
+        <option value="">Tipo de zona</option>
+        <option value="Urbana">Urbana</option>
+        <option value="Rural">Rural</option>
+      </select>
+      <input type="number" id="habitantesMunicipio" placeholder="Número de habitantes" min="1" required>
+      <div class="info-text" style="grid-column: 1 / -1; color: #666; font-size: 12px; margin-top: -10px;">
+        <strong>ℹ️ Validación:</strong> El número de habitantes del municipio debe ser menor o igual al del estado seleccionado.
+      </div>
+      <label>
+        <input type="checkbox" id="puebloMagico"> Pueblo Mágico
+      </label>
+      <select id="tipoMunicipio" required>
+        <option value="">Tipo</option>
+        <option value="Desierto">Desierto</option>
+        <option value="Playa">Playa</option>
+        <option value="Ciudad">Ciudad</option>
+        <option value="Montaña">Montaña</option>
+      </select>
+      <select id="estadoId" required>
+        <option value="">Seleccione un estado</option>
+      </select>
+      <button type="submit">Guardar Municipio</button>
+    </form>
+
+    <!-- Lista de Municipios -->
+    <h2>Lista de Municipios</h2>
+    <ul id="listaMunicipios"></ul>
+    <div id="mensajeMunicipio"></div>
+  </div>
+
+  <!-- Modal para Editar Estado -->
+  <div id="modalEstado" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Editar Estado</h3>
+        <span class="close" onclick="cerrarModal('modalEstado')">&times;</span>
+      </div>
+      <form id="formEditEstado" class="modal-form">
+        <input type="hidden" id="editEstadoId">
+        <input type="text" id="editNombreEstado" placeholder="Nombre del estado" required>
+        <input type="number" id="editHabitantesEstado" placeholder="Número de habitantes" min="0" required>
+        <input type="text" id="editCapitalEstado" placeholder="Capital" required>
+        <div class="modal-actions">
+          <button type="button" class="btn-cancel" onclick="cerrarModal('modalEstado')">Cancelar</button>
+          <button type="submit" class="btn-edit">Guardar Cambios</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal para Editar Municipio -->
+  <div id="modalMunicipio" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Editar Municipio</h3>
+        <span class="close" onclick="cerrarModal('modalMunicipio')">&times;</span>
+      </div>
+      <form id="formEditMunicipio" class="modal-form">
+        <input type="hidden" id="editMunicipioId">
+        <input type="text" id="editNombreMunicipio" placeholder="Nombre del municipio" required>
+        <select id="editTipoZona" required>
+          <option value="">Tipo de zona</option>
+          <option value="Urbana">Urbana</option>
+          <option value="Rural">Rural</option>
+        </select>
+        <input type="number" id="editHabitantesMunicipio" placeholder="Número de habitantes" min="1" required>
+        <div class="info-text" style="color: #666; font-size: 12px; margin-top: -10px;">
+          <strong>ℹ️ Validación:</strong> El número de habitantes del municipio debe ser menor o igual al del estado seleccionado.
+        </div>
+        <label>
+          <input type="checkbox" id="editPuebloMagico"> Pueblo Mágico
+        </label>
+        <select id="editTipoMunicipio" required>
+          <option value="">Tipo</option>
+          <option value="Desierto">Desierto</option>
+          <option value="Playa">Playa</option>
+          <option value="Ciudad">Ciudad</option>
+          <option value="Montaña">Montaña</option>
+        </select>
+        <select id="editEstadoId" required>
+          <option value="">Seleccione un estado</option>
+        </select>
+        <div class="modal-actions">
+          <button type="button" class="btn-cancel" onclick="cerrarModal('modalMunicipio')">Cancelar</button>
+          <button type="submit" class="btn-edit">Guardar Cambios</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = "http://localhost:3000";
+    let estadosLista = []; // Inicializar como array vacío
+
+    // ---------------- ESTADOS ----------------
+    async function cargarEstados() {
+      try {
+        const res = await fetch(`${API_URL}/estados`);
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({ error: res.statusText }));
+          throw new Error(errorData.error || errorData.details || 'Error al cargar estados');
+        }
+        let datos;
+        try {
+          datos = await res.json();
+        } catch (parseError) {
+          console.error("Error al parsear respuesta JSON:", parseError);
+          datos = [];
+        }
+        
+        // Asegurarse de que sea un array
+        if (!Array.isArray(datos)) {
+          console.warn("La respuesta no es un array:", datos);
+          datos = [];
+        }
+        estadosLista = datos;
+        
+        const lista = document.getElementById("listaEstados");
+        if (!lista) {
+          console.error("No se encontró el elemento listaEstados");
+          return;
+        }
+        
+        lista.innerHTML = "";
+        if (estadosLista.length === 0) {
+          lista.innerHTML = "<li style='color: #999;'>No hay estados registrados</li>";
+        } else {
+          estadosLista.forEach(e => {
+            const li = document.createElement("li");
+            li.innerHTML = `
+              <div class="item-info">
+                <strong>${e.nombre}</strong> - Habitantes: ${e.numero_habitantes.toLocaleString()} - Capital: ${e.capital}
+              </div>
+              <div class="item-actions">
+                <button class="btn-edit" onclick="editarEstado(${e.id_estado})">Editar</button>
+                <button class="btn-delete" onclick="eliminarEstado(${e.id_estado})">Eliminar</button>
+              </div>
+            `;
+            lista.appendChild(li);
+          });
+        }
+        // Actualizar select de estados en formulario de municipios
+        actualizarSelectEstados();
+        const mensajeDiv = document.getElementById("mensajeEstado");
+        if (mensajeDiv) {
+          mensajeDiv.textContent = "";
+        }
+      } catch (err) {
+        console.error("Error al cargar estados:", err);
+        estadosLista = []; // Asegurar que sea un array vacío en caso de error
+        const mensajeDiv = document.getElementById("mensajeEstado");
+        if (mensajeDiv) {
+          mensajeDiv.textContent = "Error al cargar estados: " + err.message;
+          mensajeDiv.style.color = "red";
+        }
+        // Intentar actualizar el select de todas formas
+        actualizarSelectEstados();
+      }
+    }
+
+    // Función para cargar estados (útil para recargar solo los estados)
+    async function recargarEstados() {
+      await cargarEstados();
+    }
+
+    function editarEstado(id) {
+      // Asegurarse de que estadosLista sea un array
+      if (!Array.isArray(estadosLista)) {
+        console.error("estadosLista no es un array, recargando estados...");
+        cargarEstados().then(() => {
+          // Intentar de nuevo después de cargar
+          const estado = estadosLista.find(e => e.id_estado === id);
+          if (estado) {
+            document.getElementById("editEstadoId").value = estado.id_estado;
+            document.getElementById("editNombreEstado").value = estado.nombre;
+            document.getElementById("editHabitantesEstado").value = estado.numero_habitantes;
+            document.getElementById("editCapitalEstado").value = estado.capital;
+            document.getElementById("modalEstado").style.display = "block";
+          }
+        });
+        return;
+      }
+      
+      const estado = estadosLista.find(e => e.id_estado === id);
+      if (!estado) {
+        console.error("Estado no encontrado con id:", id);
+        return;
+      }
+      
+      document.getElementById("editEstadoId").value = estado.id_estado;
+      document.getElementById("editNombreEstado").value = estado.nombre;
+      document.getElementById("editHabitantesEstado").value = estado.numero_habitantes;
+      document.getElementById("editCapitalEstado").value = estado.capital;
+      document.getElementById("modalEstado").style.display = "block";
+    }
+
+    async function eliminarEstado(id) {
+      if (!confirm(`¿Está seguro de eliminar este estado? Esta acción eliminará también todos sus municipios.`)) {
+        return;
+      }
+      
+      try {
+        const res = await fetch(`${API_URL}/estados/${id}`, {
+          method: "DELETE"
+        });
+        
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({ error: res.statusText }));
+          throw new Error(errorData.error || errorData.details || 'Error al eliminar estado');
+        }
+        
+        document.getElementById("mensajeEstado").textContent = "Estado eliminado exitosamente";
+        document.getElementById("mensajeEstado").style.color = "green";
+        await cargarEstados(); // Esperar a que se carguen los estados
+        cargarMunicipios(); // Recargar municipios por si se eliminaron algunos
+      } catch (err) {
+        document.getElementById("mensajeEstado").textContent = "Error: " + err.message;
+        document.getElementById("mensajeEstado").style.color = "red";
+      }
+    }
+
+    function actualizarSelectEstados() {
+      // Asegurarse de que estadosLista sea un array
+      if (!Array.isArray(estadosLista)) {
+        estadosLista = [];
+      }
+      
+      console.log("Actualizando select de estados. Estados disponibles:", estadosLista.length);
+      
+      const selectEstado = document.getElementById("estadoId");
+      const selectEditEstado = document.getElementById("editEstadoId");
+      
+      // Verificar que los elementos existan
+      if (!selectEstado) {
+        console.error("No se encontró el elemento estadoId");
+        return;
+      }
+      if (!selectEditEstado) {
+        console.error("No se encontró el elemento editEstadoId");
+        // Continuar aunque falte el select de edición
+      }
+      
+      // Limpiar opciones excepto la primera
+      try {
+        if (selectEstado.options) {
+          while (selectEstado.options.length > 1) {
+            selectEstado.remove(1);
+          }
+        }
+        if (selectEditEstado && selectEditEstado.options) {
+          while (selectEditEstado.options.length > 1) {
+            selectEditEstado.remove(1);
+          }
+        }
+      } catch (err) {
+        console.error("Error al limpiar opciones:", err);
+      }
+      
+      // Agregar estados
+      if (Array.isArray(estadosLista) && estadosLista.length > 0) {
+        console.log("Agregando", estadosLista.length, "estados al select");
+        estadosLista.forEach(estado => {
+          try {
+            if (!estado || !estado.id_estado || !estado.nombre) {
+              console.warn("Estado inválido:", estado);
+              return;
+            }
+            
+            const option = document.createElement("option");
+            option.value = estado.id_estado;
+            option.textContent = estado.nombre;
+            selectEstado.appendChild(option);
+            
+            if (selectEditEstado) {
+              const optionEdit = document.createElement("option");
+              optionEdit.value = estado.id_estado;
+              optionEdit.textContent = estado.nombre;
+              selectEditEstado.appendChild(optionEdit);
+            }
+          } catch (err) {
+            console.error("Error al agregar opción:", err, estado);
+          }
+        });
+        console.log("Select actualizado. Opciones en selectEstado:", selectEstado.options.length);
+      } else {
+        console.warn("No hay estados para agregar al select. estadosLista:", estadosLista);
+      }
+    }
+
+    document.getElementById("estadoForm").addEventListener("submit", async (evt) => {
+      evt.preventDefault();
+      const mensajeDiv = document.getElementById("mensajeEstado");
+      mensajeDiv.textContent = "";
+      
+      try {
+        const nombre = document.getElementById("nombreEstado").value;
+        const habitantes = document.getElementById("habitantesEstado").value;
+        const capital = document.getElementById("capitalEstado").value;
+
+        const res = await fetch(`${API_URL}/estados`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ nombre, numero_habitantes: habitantes, capital })
+        });
+
+        if (!res.ok) {
+          let errorData;
+          try {
+            errorData = await res.json();
+          } catch {
+            const text = await res.text();
+            errorData = { error: text };
+          }
+          throw new Error(errorData.error || errorData.details || 'Error al crear estado');
+        }
+
+        mensajeDiv.textContent = "Estado creado exitosamente";
+        mensajeDiv.style.color = "green";
+        await cargarEstados(); // Esperar a que se carguen los estados (esto ya actualiza el select)
+        evt.target.reset();
+        
+        // Asegurar que el select se actualice
+        setTimeout(() => {
+          actualizarSelectEstados();
+        }, 100);
+      } catch (err) {
+        mensajeDiv.textContent = "Error: " + err.message;
+        mensajeDiv.style.color = "red";
+      }
+    });
+
+    document.getElementById("formEditEstado").addEventListener("submit", async (evt) => {
+      evt.preventDefault();
+      const mensajeDiv = document.getElementById("mensajeEstado");
+      mensajeDiv.textContent = "";
+      
+      try {
+        const id = document.getElementById("editEstadoId").value;
+        const nombre = document.getElementById("editNombreEstado").value;
+        const habitantes = document.getElementById("editHabitantesEstado").value;
+        const capital = document.getElementById("editCapitalEstado").value;
+
+        const res = await fetch(`${API_URL}/estados/${id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ nombre, numero_habitantes: habitantes, capital })
+        });
+
+        if (!res.ok) {
+          let errorData;
+          try {
+            errorData = await res.json();
+          } catch {
+            const text = await res.text();
+            errorData = { error: text };
+          }
+          throw new Error(errorData.error || errorData.details || 'Error al actualizar estado');
+        }
+
+        mensajeDiv.textContent = "Estado actualizado exitosamente";
+        mensajeDiv.style.color = "green";
+        cerrarModal("modalEstado");
+        await cargarEstados(); // Esperar a que se carguen los estados
+      } catch (err) {
+        mensajeDiv.textContent = "Error: " + err.message;
+        mensajeDiv.style.color = "red";
+      }
+    });
+
+    // ---------------- MUNICIPIOS ----------------
+    async function cargarMunicipios() {
+      try {
+        const res = await fetch(`${API_URL}/municipios`);
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({ error: res.statusText }));
+          throw new Error(errorData.error || errorData.details || 'Error al cargar municipios');
+        }
+        let municipios = await res.json();
+        
+        // Asegurarse de que municipios sea un array
+        if (!Array.isArray(municipios)) {
+          console.warn("La respuesta de municipios no es un array:", municipios);
+          municipios = [];
+        }
+        
+        const lista = document.getElementById("listaMunicipios");
+        if (!lista) {
+          console.error("No se encontró el elemento listaMunicipios");
+          return;
+        }
+        
+        lista.innerHTML = "";
+        if (!municipios || municipios.length === 0) {
+          lista.innerHTML = "<li style='color: #999;'>No hay municipios registrados</li>";
+        } else {
+          municipios.forEach(m => {
+            const estadoNombre = (Array.isArray(estadosLista) 
+              ? estadosLista.find(e => e.id_estado === m.id_estado)?.nombre 
+              : null) || m.id_estado;
+            const li = document.createElement("li");
+            li.innerHTML = `
+              <div class="item-info">
+                <strong>${m.nombre}</strong> - ${m.tipo_zona}, ${m.tipo} - Habitantes: ${m.numero_habitantes.toLocaleString()} 
+                - Estado: ${estadoNombre} ${m.pueblo_magico ? '⭐ Pueblo Mágico' : ''}
+              </div>
+              <div class="item-actions">
+                <button class="btn-edit" onclick="editarMunicipio(${m.id_municipio})">Editar</button>
+                <button class="btn-delete" onclick="eliminarMunicipio(${m.id_municipio})">Eliminar</button>
+              </div>
+            `;
+            lista.appendChild(li);
+          });
+        }
+        document.getElementById("mensajeMunicipio").textContent = "";
+      } catch (err) {
+        document.getElementById("mensajeMunicipio").textContent = "Error al cargar municipios: " + err.message;
+        document.getElementById("mensajeMunicipio").style.color = "red";
+      }
+    }
+
+    async function editarMunicipio(id) {
+      try {
+        // Asegurarse de que los estados estén cargados antes de abrir el modal
+        if (!Array.isArray(estadosLista) || estadosLista.length === 0) {
+          await cargarEstados();
+        }
+        
+        const res = await fetch(`${API_URL}/municipios`);
+        if (!res.ok) throw new Error('Error al cargar municipios');
+        const municipios = await res.json();
+        const municipio = municipios.find(m => m.id_municipio === id);
+        if (!municipio) return;
+        
+        // Actualizar el select de estados antes de abrir el modal
+        actualizarSelectEstados();
+        
+        document.getElementById("editMunicipioId").value = municipio.id_municipio;
+        document.getElementById("editNombreMunicipio").value = municipio.nombre;
+        document.getElementById("editTipoZona").value = municipio.tipo_zona;
+        document.getElementById("editHabitantesMunicipio").value = municipio.numero_habitantes;
+        document.getElementById("editPuebloMagico").checked = municipio.pueblo_magico === 1 || municipio.pueblo_magico === true;
+        document.getElementById("editTipoMunicipio").value = municipio.tipo;
+        document.getElementById("editEstadoId").value = municipio.id_estado;
+        document.getElementById("modalMunicipio").style.display = "block";
+      } catch (err) {
+        console.error("Error al editar municipio:", err);
+        alert("Error al cargar datos del municipio: " + err.message);
+      }
+    }
+
+    async function eliminarMunicipio(id) {
+      if (!confirm(`¿Está seguro de eliminar este municipio?`)) {
+        return;
+      }
+      
+      try {
+        const res = await fetch(`${API_URL}/municipios/${id}`, {
+          method: "DELETE"
+        });
+        
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({ error: res.statusText }));
+          throw new Error(errorData.error || errorData.details || 'Error al eliminar municipio');
+        }
+        
+        document.getElementById("mensajeMunicipio").textContent = "Municipio eliminado exitosamente";
+        document.getElementById("mensajeMunicipio").style.color = "green";
+        cargarMunicipios();
+      } catch (err) {
+        document.getElementById("mensajeMunicipio").textContent = "Error: " + err.message;
+        document.getElementById("mensajeMunicipio").style.color = "red";
+      }
+    }
+
+    document.getElementById("municipioForm").addEventListener("submit", async (evt) => {
+      evt.preventDefault();
+      const mensajeDiv = document.getElementById("mensajeMunicipio");
+      mensajeDiv.textContent = "";
+      
+      try {
+        const nombre = document.getElementById("nombreMunicipio").value.trim();
+        const tipo_zona = document.getElementById("tipoZona").value;
+        const numero_habitantes = parseInt(document.getElementById("habitantesMunicipio").value, 10);
+        const pueblo_magico = document.getElementById("puebloMagico").checked;
+        const tipo = document.getElementById("tipoMunicipio").value;
+        const id_estado = parseInt(document.getElementById("estadoId").value, 10);
+
+        // Validación básica en el frontend
+        if (!nombre) {
+          throw new Error("El nombre del municipio es requerido");
+        }
+        if (!tipo_zona) {
+          throw new Error("El tipo de zona es requerido");
+        }
+        if (!tipo) {
+          throw new Error("El tipo de municipio es requerido");
+        }
+        if (!id_estado || isNaN(id_estado)) {
+          throw new Error("Debe seleccionar un estado");
+        }
+        if (isNaN(numero_habitantes) || numero_habitantes < 1) {
+          throw new Error("El número de habitantes debe ser un número válido mayor a 0");
+        }
+
+        console.log("Enviando datos:", { nombre, tipo_zona, numero_habitantes, pueblo_magico, tipo, id_estado });
+
+        const res = await fetch(`${API_URL}/municipios`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ nombre, tipo_zona, numero_habitantes, pueblo_magico, tipo, id_estado })
+        });
+
+        if (!res.ok) {
+          let errorData;
+          try {
+            errorData = await res.json();
+          } catch {
+            const text = await res.text();
+            errorData = { error: text };
+          }
+          throw new Error(errorData.error || errorData.details || 'Error al crear municipio');
+        }
+
+        mensajeDiv.textContent = "Municipio creado exitosamente";
+        mensajeDiv.style.color = "green";
+        cargarMunicipios();
+        evt.target.reset();
+      } catch (err) {
+        mensajeDiv.textContent = "Error: " + err.message;
+        mensajeDiv.style.color = "red";
+      }
+    });
+
+    document.getElementById("formEditMunicipio").addEventListener("submit", async (evt) => {
+      evt.preventDefault();
+      const mensajeDiv = document.getElementById("mensajeMunicipio");
+      mensajeDiv.textContent = "";
+      
+      try {
+        const id = document.getElementById("editMunicipioId").value;
+        const nombre = document.getElementById("editNombreMunicipio").value.trim();
+        const tipo_zona = document.getElementById("editTipoZona").value;
+        const numero_habitantes = parseInt(document.getElementById("editHabitantesMunicipio").value, 10);
+        const pueblo_magico = document.getElementById("editPuebloMagico").checked;
+        const tipo = document.getElementById("editTipoMunicipio").value;
+        const id_estado = parseInt(document.getElementById("editEstadoId").value, 10);
+
+        // Validación básica en el frontend
+        if (!nombre) {
+          throw new Error("El nombre del municipio es requerido");
+        }
+        if (!tipo_zona) {
+          throw new Error("El tipo de zona es requerido");
+        }
+        if (!tipo) {
+          throw new Error("El tipo de municipio es requerido");
+        }
+        if (!id_estado || isNaN(id_estado)) {
+          throw new Error("Debe seleccionar un estado");
+        }
+        if (isNaN(numero_habitantes) || numero_habitantes < 1) {
+          throw new Error("El número de habitantes debe ser un número válido mayor a 0");
+        }
+
+        const res = await fetch(`${API_URL}/municipios/${id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ nombre, tipo_zona, numero_habitantes, pueblo_magico, tipo, id_estado })
+        });
+
+        if (!res.ok) {
+          let errorData;
+          try {
+            errorData = await res.json();
+          } catch {
+            const text = await res.text();
+            errorData = { error: text };
+          }
+          throw new Error(errorData.error || errorData.details || 'Error al actualizar municipio');
+        }
+
+        mensajeDiv.textContent = "Municipio actualizado exitosamente";
+        mensajeDiv.style.color = "green";
+        cerrarModal("modalMunicipio");
+        cargarMunicipios();
+      } catch (err) {
+        mensajeDiv.textContent = "Error: " + err.message;
+        mensajeDiv.style.color = "red";
+      }
+    });
+
+    // Funciones de modal
+    function cerrarModal(modalId) {
+      document.getElementById(modalId).style.display = "none";
+    }
+
+    window.onclick = function(event) {
+      const modals = ['modalEstado', 'modalMunicipio'];
+      modals.forEach(modalId => {
+        const modal = document.getElementById(modalId);
+        if (event.target === modal) {
+          modal.style.display = "none";
+        }
+      });
+    }
+
+    // Inicializar listas cuando el DOM esté completamente cargado
+    function inicializarApp() {
+      (async () => {
+        try {
+          // Asegurar que estadosLista esté inicializado antes de cargar
+          if (!Array.isArray(estadosLista)) {
+            estadosLista = [];
+          }
+          console.log("Inicializando aplicación...");
+          await cargarEstados(); // Esperar a que se carguen los estados primero (esto ya llama a actualizarSelectEstados)
+          cargarMunicipios(); // Luego cargar municipios
+          
+          // Asegurar que el select se actualice después de un pequeño delay
+          setTimeout(() => {
+            console.log("Actualizando select después de inicialización...");
+            actualizarSelectEstados();
+          }, 300);
+        } catch (err) {
+          console.error("Error al inicializar:", err);
+          estadosLista = []; // Asegurar que sea un array incluso si hay error
+        }
+      })();
+    }
+    
+    // Ejecutar cuando el DOM esté listo
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', inicializarApp);
+    } else {
+      // DOM ya está listo
+      inicializarApp();
+    }
+  </script>
+</body>
+</html>
